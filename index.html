@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Vision8 Media Photo Gallery</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#f0f0f0;min-height:100vh}
+
+/* Login screen */
+.login-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;padding:2rem}
+.login-screen h1{font-size:1.8rem;margin-bottom:1.5rem;text-align:center}
+.login-box{background:#2a2a2a;border-radius:12px;padding:2rem;max-width:400px;width:100%;text-align:center}
+.login-box input{width:100%;padding:12px;border:1px solid #444;border-radius:8px;background:#333;color:#fff;font-size:1rem;margin-bottom:1rem}
+.login-box input:focus{outline:none;border-color:#4ade80}
+.login-box button{width:100%;padding:12px;border:none;border-radius:8px;background:#4ade80;color:#1a1a1a;font-size:1rem;font-weight:600;cursor:pointer}
+.login-box button:hover{background:#22c55e}
+.login-error{color:#f87171;font-size:0.9rem;margin-top:0.5rem;display:none}
+
+/* Gallery */
+.gallery-container{display:none;max-width:1400px;margin:0 auto;padding:1.5rem}
+.gallery-header{text-align:center;padding:1.5rem 0}
+.gallery-header h1{font-size:1.8rem;margin-bottom:0.5rem}
+.logos{display:flex;align-items:center;justify-content:center;gap:2rem;margin-bottom:1rem;flex-wrap:wrap}
+.logo{height:60px;max-width:200px;object-fit:contain}
+
+/* Tabs */
+.tab-bar{display:flex;gap:0.5rem;flex-wrap:wrap;justify-content:center;margin:1rem 0}
+.tab-btn{padding:8px 20px;border:1px solid #444;border-radius:20px;background:transparent;color:#ccc;cursor:pointer;font-size:0.9rem;transition:all 0.2s}
+.tab-btn:hover{border-color:#4ade80;color:#fff}
+.tab-btn.active{background:#4ade80;color:#1a1a1a;border-color:#4ade80;font-weight:600}
+
+/* Grid */
+.thumb-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-top:1rem}
+.thumb{border-radius:8px;overflow:hidden;cursor:pointer;aspect-ratio:1;position:relative}
+.thumb img{width:100%;height:100%;object-fit:cover;transition:transform 0.2s}
+.thumb:hover img{transform:scale(1.05)}
+
+/* Video badge */
+.video-thumb .play-badge{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:48px;height:48px;background:rgba(0,0,0,0.6);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;color:#fff;pointer-events:none;transition:background 0.2s}
+.video-thumb:hover .play-badge{background:rgba(74,222,128,0.8)}
+
+/* Download */
+.download-btn{display:inline-block;padding:10px 24px;background:#4ade80;color:#1a1a1a;text-decoration:none;border-radius:8px;font-weight:600;margin:0.5rem 0 1rem}
+.download-btn:hover{background:#22c55e}
+
+/* Image Lightbox */
+.lightbox{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:1000;align-items:center;justify-content:center;cursor:pointer}
+.lightbox.active{display:flex}
+.lightbox img{max-width:95vw;max-height:95vh;object-fit:contain;border-radius:4px}
+
+/* Video Lightbox */
+.video-lightbox{display:none;position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.95);z-index:1000;align-items:center;justify-content:center}
+.video-lightbox.active{display:flex}
+.video-lightbox-inner{position:relative;max-width:95vw;max-height:95vh;width:900px}
+.video-lightbox video{width:100%;max-height:85vh;border-radius:4px;background:#000}
+.video-close{position:absolute;top:-40px;right:0;color:#fff;font-size:1.5rem;cursor:pointer;background:none;border:none;padding:8px;opacity:0.7}
+.video-close:hover{opacity:1}
+
+.credit{text-align:center;padding:2rem 0 1rem;font-size:0.85rem;opacity:0.5}
+
+@media(max-width:640px){
+  .thumb-grid{grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:4px}
+  .tab-btn{padding:6px 14px;font-size:0.8rem}
+  .logo{height:40px;max-width:140px}
+  .gallery-header h1{font-size:1.3rem}
+  .video-lightbox-inner{width:95vw}
+}
+</style>
+</head>
+<body>
+
+
+
+<!-- Gallery -->
+<div class="gallery-container" id="galleryContainer" style="display:block">
+  <div class="gallery-header">
+
+        <div class="logos">
+            <img src="https://res.cloudinary.com/deyb4o5qz/image/upload/v1/vision8-logo.png" alt="Vision8" class="logo" onerror="this.style.display='none'"/>
+        </div>
+    <h1>Vision8 Media Photo Gallery</h1>
+  </div>
+
+  <div class="tab-bar">
+    <button class="tab-btn active" data-tab="vision8-media">Vision8 Media</button>
+  </div>
+
+  <div class="tab-panel" id="panel-vision8-media" style="display:grid"><div class="thumb-grid"></div></div>
+
+  <div class="credit">Photos by Andy McGrath</div>
+</div>
+
+<!-- Image Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <img id="lightboxImg" src="" alt=""/>
+</div>
+
+<!-- Video Lightbox -->
+<div class="video-lightbox" id="videoLightbox">
+  <div class="video-lightbox-inner">
+    <button class="video-close" onclick="closeVideo()">&#10005;</button>
+    <video id="videoPlayer" controls preload="metadata"></video>
+  </div>
+</div>
+
+<script>
+
+
+// Tabs
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.style.display = 'none');
+    btn.classList.add('active');
+    document.getElementById('panel-' + btn.dataset.tab).style.display = 'grid';
+  });
+});
+
+// Image Lightbox
+function openLightbox(url) {
+  document.getElementById('lightboxImg').src = url;
+  document.getElementById('lightbox').classList.add('active');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('active');
+  document.getElementById('lightboxImg').src = '';
+}
+
+// Video Lightbox
+function openVideo(url) {
+  const player = document.getElementById('videoPlayer');
+  player.src = url;
+  document.getElementById('videoLightbox').classList.add('active');
+  player.play();
+}
+function closeVideo() {
+  const player = document.getElementById('videoPlayer');
+  player.pause();
+  player.src = '';
+  document.getElementById('videoLightbox').classList.remove('active');
+}
+
+// Close video lightbox on background click
+document.getElementById('videoLightbox').addEventListener('click', function(e) {
+  if (e.target === this) closeVideo();
+});
+
+// Keyboard nav
+document.addEventListener('keydown', (e) => {
+  if (e.key === 'Escape') {
+    closeLightbox();
+    closeVideo();
+  }
+});
+</script>
+</body>
+</html>
